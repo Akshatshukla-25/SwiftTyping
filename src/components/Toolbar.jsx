@@ -1,108 +1,55 @@
-import { useState } from "react";
+const TIME_OPTIONS = [15, 30, 60, 120]
 
-const MODES = [
-  { id: "words", label: "words" },
-  { id: "sentences", label: "sentences" },
-  { id: "code", label: "code" },
-];
+export default function Toolbar({ timeOption, setTimeOption, wpm, accuracy, timeLeft, totalTime }) {
+  // Progress bar width as percentage
+  const progressPercent = (timeLeft / totalTime) * 100
 
-const TIMES = [
-  { id: 15, label: "15" },
-  { id: 30, label: "30" },
-  { id: 60, label: "60" },
-  { id: Infinity, label: "∞" },
-];
-
-function ToolbarButton({ active, onClick, children }) {
-  const [hovered, setHovered] = useState(false);
   return (
-    <button
-      onClick={onClick}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: "transparent",
-        border: "none",
-        cursor: "pointer",
-        fontFamily: "JetBrains Mono, monospace",
-        fontSize: "0.8rem",
-        fontWeight: active ? 500 : 400,
-        letterSpacing: "0.04em",
-        color: active ? "#60a5fa" : hovered ? "#c8cdd8" : "#3a3f55",
-        padding: "0.2rem 0",
-        transition: "color 0.15s ease",
-        position: "relative",
-        outline: "none",
-      }}
-    >
-      {children}
-      {active && (
-        <span
-          style={{
-            position: "absolute",
-            bottom: "-2px",
-            left: 0,
-            right: 0,
-            height: "1px",
-            background: "#60a5fa",
-            borderRadius: "1px",
-            opacity: 0.6,
-          }}
-        />
-      )}
-    </button>
-  );
-}
+    <div className="w-full max-w-3xl mb-6">
+      {/* Live stats row */}
+      <div className="flex justify-between items-center mb-4">
+        <div className="flex gap-8">
+          <div className="text-center">
+            <div className="text-[#e2b714] text-3xl font-bold">{wpm}</div>
+            <div className="text-xs uppercase tracking-widest mt-1">wpm</div>
+          </div>
+          <div className="text-center">
+            <div className="text-[#e2b714] text-3xl font-bold">{accuracy}</div>
+            <div className="text-xs uppercase tracking-widest mt-1">acc %</div>
+          </div>
+        </div>
 
-export default function Toolbar({ mode, time, onModeChange, onTimeChange }) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "0",
-        background: "#13161e",
-        borderRadius: "10px",
-        padding: "0.65rem 1.5rem",
-        border: "1px solid #1a1e2a",
-      }}
-    >
-      {/* Mode group */}
-      <div style={{ display: "flex", gap: "1.75rem" }}>
-        {MODES.map((m) => (
-          <ToolbarButton
-            key={m.id}
-            active={mode === m.id}
-            onClick={() => onModeChange(m.id)}
-          >
-            {m.label}
-          </ToolbarButton>
-        ))}
+        {/* Timer */}
+        <div className="text-center">
+          <div className="text-[#e2b714] text-3xl font-bold">{timeLeft}</div>
+          <div className="text-xs uppercase tracking-widest mt-1">sec</div>
+        </div>
       </div>
 
-      {/* Divider */}
-      <div
-        style={{
-          width: "1px",
-          height: "14px",
-          background: "#1f2333",
-          margin: "0 1.5rem",
-        }}
-      />
+      {/* Progress bar */}
+      <div className="w-full h-1 bg-[#2c2e31] rounded-full mb-4">
+        <div
+          className="h-1 bg-[#e2b714] rounded-full transition-all duration-1000"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
 
-      {/* Time group */}
-      <div style={{ display: "flex", gap: "1.75rem" }}>
-        {TIMES.map((t) => (
-          <ToolbarButton
-            key={t.id}
-            active={time === t.id}
-            onClick={() => onTimeChange(t.id)}
+      {/* Time selector buttons */}
+      <div className="flex gap-2 justify-center">
+        {TIME_OPTIONS.map(t => (
+          <button
+            key={t}
+            onClick={() => setTimeOption(t)}
+            className={`px-4 py-1 rounded-full text-sm transition-colors ${
+              timeOption === t
+                ? 'text-[#e2b714] border border-[#e2b714]'
+                : 'hover:text-[#d1d0c5] border border-transparent'
+            }`}
           >
-            {t.label}
-          </ToolbarButton>
+            {t}s
+          </button>
         ))}
       </div>
     </div>
-  );
+  )
 }

@@ -1,102 +1,102 @@
-import { useRef, useEffect, useState } from "react";
+import { useEffect, useRef } from 'react'
 
-export default function TypingArea({ textArray, userInput, status }) {
-  const charRefs = useRef([]);
-  const [caretPos, setCaretPos] = useState({ x: 0, y: 0 });
-  const containerRef = useRef(null);
-  const [isActive, setIsActive] = useState(false);
+export default function TypingArea({ words, currentWordIndex, currentInput, wordStatuses, onInput, started }) {
+  const inputRef = useRef(null)
+  const displayRef = useRef(null)
 
+  // Auto-focus the input when component loads
   useEffect(() => {
-    setIsActive(status === "running");
-  }, [status]);
+    inputRef.current?.focus()
+  }, [])
 
+  // Auto-scroll so current word is always visible
   useEffect(() => {
-    const index = userInput.length;
-    const el = charRefs.current[index];
-    const container = containerRef.current;
-    if (!el || !container) return;
-    const charRect = el.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    setCaretPos({
-      x: charRect.left - containerRect.left,
-      y: charRect.top - containerRect.top,
-    });
-  }, [userInput]);
+    const currentWordEl = displayRef.current?.querySelector(`[data-index="${currentWordIndex}"]`)
+    if (currentWordEl) {
+      currentWordEl.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [currentWordIndex])
 
   return (
-    <div
-      ref={containerRef}
-      style={{
-        position: "relative",
-        width: "100%",
-        minHeight: "9rem",
-        userSelect: "none",
-        cursor: "default",
-        padding: "1.75rem 2rem",
-        background: "#13161e",
-        borderRadius: "12px",
-        border: "1px solid #1a1e2a",
-        transition: "border-color 0.3s ease",
-        borderColor: isActive ? "#1f2b40" : "#1a1e2a",
-      }}
-    >
-      {/* Animated caret */}
+    <div className="w-full max-w-3xl" onClick={() => inputRef.current?.focus()}>
+      {/* Word display */}
       <div
-        className={!isActive ? "caret-blink" : ""}
-        style={{
-          position: "absolute",
-          width: "2px",
-          height: "1.5rem",
-          backgroundColor: "#60a5fa",
-          borderRadius: "1px",
-          transform: `translate(${caretPos.x + 32}px, ${caretPos.y + 28}px)`,
-          transition: "transform 80ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
-          zIndex: 10,
-          boxShadow: "0 0 6px rgba(96, 165, 250, 0.5)",
-        }}
-      />
-
-      {/* Text */}
-      <div
-        style={{
-          fontFamily: "JetBrains Mono, monospace",
-          fontSize: "1.2rem",
-          lineHeight: "2.25rem",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          letterSpacing: "0.01em",
-        }}
+        ref={displayRef}
+        className="h-32 overflow-hidden mb-6 font-mono text-2xl leading-relaxed select-none cursor-text"
       >
-        {textArray.map((char, i) => {
-          let color;
-          let textDecoration = "none";
-
-          if (i < userInput.length) {
-            if (userInput[i] === char) {
-              color = "#c8cdd8";
-            } else {
-              color = "#f87171";
-              if (char === " ") textDecoration = "underline";
-            }
-          } else {
-            color = "#2a2f42";
-          }
+        {words.map((word, wordIndex) => {
+          const status = wordStatuses[wordIndex]         // 'correct' | 'wrong' | undefined
+          const isCurrentWord = wordIndex === currentWordIndex
 
           return (
             <span
-              key={i}
-              ref={(el) => (charRefs.current[i] = el)}
-              style={{
-                color,
-                textDecoration,
-                transition: "color 0.05s ease",
-              }}
+              key={wordIndex}
+              data-index={wordIndex}
+              className={`inline-block mr-3 ${
+                status === 'correct' ? 'text-[#d1d0c5]' :
+                status === 'wrong'   ? 'text-[#ca4754] underline' :
+                'text-[#646669]'
+              }`}
             >
-              {char}
+              {word.split('').map((char, charIndex) => {
+                // Figure out the color of each character
+                let charColor = 'text-[#646669]' // default: untyped gray
+
+                if (isCurrentWord) {
+                  if (charIndex < currentInput.length) {
+                    // User has typed this character
+                    charColor = currentInput[charIndex] === char
+                      ? 'text-[#d1d0c5]'   // correct
+                      : 'text-[#ca4754]'    // wrong
+                  }
+                } else if (status === 'correct') {
+                  charColor = 'text-[#d1d0c5]'
+                } else if (status === 'wrong') {
+                  charColor = 'text-[#ca4754]'
+                }
+
+                // Show blinking cursor before the current character position
+                const isCursorHere = isCurrentWord && charIndex === currentInput.length
+
+                return (
+                  <span key={charIndex} className="relative">
+                    {/* Blinking cursor */}
+                    {isCursorHere && (
+                      <span className="absolute -left-0.5 top-1 bottom-1 w-0.5 bg-[#e2b714] animate-pulse" />
+                    )}
+                    <span className={charColor}>{char}</span>
+                  </span>
+                )
+              })}
             </span>
-          );
+          )
         })}
       </div>
+
+      {/* Hidden input — captures keystrokes */}
+      <input
+        ref={inputRef}
+        value={currentInput}
+        onChange={e => onInput(e.target.value)}
+        className="opacity-0 absolute w-px h-px"
+        autoComplete="off"
+        autoCorrect="off"
+        autoCapitalize="off"
+        spellCheck="false"
+      />
+
+      {/* Fake visible input bar */}
+      <div className="flex gap-3 items-center">
+        <div
+          className="flex-1 h-11 bg-[#2c2e31] rounded-lg px-4 flex items-center font-mono text-base text-[#d1d0c5] cursor-text border border-transparent focus-within:border-[#e2b714]"
+        >
+          {currentInput || (
+            <span className="text-[#646669]">
+              {started ? 'keep typing...' : 'click here or start typing...'}
+            </span>
+          )}
+        </div>
+      </div>
     </div>
-  );
+  )
 }
