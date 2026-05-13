@@ -1,4 +1,4 @@
-export default function ResultScreen({ wpm, accuracy, correctWords, wrongWords, timeOption, onRestart }) {
+export default function ResultScreen({ wpm, accuracy, correctWords, wrongWords, timeTaken, onRestart }) {
   return (
     <div className="flex flex-col items-center justify-center flex-1 px-4">
       <div className="text-center">
@@ -22,7 +22,7 @@ export default function ResultScreen({ wpm, accuracy, correctWords, wrongWords, 
           </div>
           <div className="text-center">
             <p className="text-[#646669] text-xs uppercase tracking-widest mb-1">time</p>
-            <p className="text-[#d1d0c5] text-3xl font-semibold">{timeOption}s</p>
+            <p className="text-[#d1d0c5] text-3xl font-semibold">{timeTaken}s</p>
           </div>
         </div>
 
